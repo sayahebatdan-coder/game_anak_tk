@@ -1,0 +1,1734 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Edukasi Anak TK</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    * {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+      50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.8); }
+    }
+    
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .float-animation {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    .bounce-animation {
+      animation: bounce 0.6s ease;
+    }
+    
+    .pulse-animation {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .glow-animation {
+      animation: glow 2s ease-in-out infinite;
+    }
+    
+    .pop-in {
+      animation: popIn 0.5s ease-out;
+    }
+    
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: scale(1.05);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full overflow-auto">
+  <main id="mainContainer" class="w-full h-full"><!-- Content will be dynamically loaded here -->
+  </main>
+  <script>
+    const defaultConfig = {
+      welcome_title: "Selamat Datang di Dunia Belajar!",
+      welcome_subtitle: "Mari Belajar Sambil Bermain!",
+      start_button_text: "Mulai Bermain",
+      background_color: "#3b82f6",
+      secondary_color: "#8b5cf6",
+      surface_color: "#ffffff",
+      text_color: "#1e293b",
+      accent_color: "#f59e0b",
+      font_family: "Comic Sans MS",
+      font_size: 16
+    };
+
+    let currentPage = 'welcome';
+    let playerName = '';
+    let player1Name = '';
+    let player2Name = '';
+    let currentPlayer = 1;
+    let player1Score = 0;
+    let player2Score = 0;
+    let isMultiplayer = false;
+    let currentGame = '';
+    let currentLevel = 0;
+    let currentQuestionIndex = 0;
+    let gameData = {};
+
+    // Game Data
+    const countingEmojis = ['🍎', '⭐', '🐰', '🐱', '🌸', '🎈', '🍭', '🦋', '🐠', '🌼', '🍓', '🐻', '🌻', '🐝', '🎨'];
+    
+    const wordLevels = {
+      level1: [
+        {word: 'APEL', emoji: '🍎', missing: [0]},
+        {word: 'BOLA', emoji: '⚽', missing: [2]},
+        {word: 'FOTO', emoji: '📷', missing: [0]},
+        {word: 'IKAN', emoji: '🐠', missing: [0]},
+        {word: 'NAGA', emoji: '🐉', missing: [2]},
+        {word: 'BUKU', emoji: '📚', missing: [1]},
+        {word: 'KUPU', emoji: '🦋', missing: [3]},
+        {word: 'TOPI', emoji: '🎩', missing: [1]},
+        {word: 'BAJU', emoji: '👕', missing: [2]},
+        {word: 'ROTI', emoji: '🍞', missing: [0]},
+        {word: 'MEJA', emoji: '🪑', missing: [3]},
+        {word: 'GIGI', emoji: '🦷', missing: [2]},
+        {word: 'KAKI', emoji: '🦵', missing: [1]},
+        {word: 'MATA', emoji: '👁️', missing: [0]},
+        {word: 'DADU', emoji: '🎲', missing: [2]}
+      ],
+      level2: [
+        {word: 'BOLA', emoji: '⚽', missing: [0, 2]},
+        {word: 'KUCING', emoji: '🐱', missing: [2, 4]},
+        {word: 'GAJAH', emoji: '🐘', missing: [0, 3]},
+        {word: 'MOBIL', emoji: '🚗', missing: [1, 3]},
+        {word: 'NANAS', emoji: '🍍', missing: [0, 2]},
+        {word: 'PENSIL', emoji: '✏️', missing: [0, 4]},
+        {word: 'BURUNG', emoji: '🐦', missing: [1, 4]},
+        {word: 'BUNGA', emoji: '🌸', missing: [0, 3]},
+        {word: 'SEPATU', emoji: '👟', missing: [1, 4]},
+        {word: 'RUMAH', emoji: '🏠', missing: [0, 3]},
+        {word: 'JENDELA', emoji: '🪟', missing: [0, 5]},
+        {word: 'POHON', emoji: '🌳', missing: [1, 3]},
+        {word: 'PIRING', emoji: '🍽️', missing: [0, 4]},
+        {word: 'CELANA', emoji: '👖', missing: [1, 4]},
+        {word: 'SANDAL', emoji: '🩴', missing: [0, 4]}
+      ],
+      level3: [
+        {word: 'HARIMAU', emoji: '🐯', missing: [1, 3, 5]},
+        {word: 'KELINCI', emoji: '🐰', missing: [0, 3, 5]},
+        {word: 'SEMANGKA', emoji: '🍉', missing: [1, 4, 6]},
+        {word: 'KUCING', emoji: '🐱', missing: [0, 2, 4]},
+        {word: 'JERUK', emoji: '🍊', missing: [0, 2, 4]},
+        {word: 'PESAWAT', emoji: '✈️', missing: [1, 3, 5]},
+        {word: 'SEPEDA', emoji: '🚲', missing: [0, 2, 4]},
+        {word: 'GAJAH', emoji: '🐘', missing: [0, 2, 4]},
+        {word: 'MONYET', emoji: '🐵', missing: [0, 2, 4]},
+        {word: 'JAGUNG', emoji: '🌽', missing: [0, 2, 4]},
+        {word: 'TOMAT', emoji: '🍅', missing: [0, 2, 4]},
+        {word: 'PISANG', emoji: '🍌', missing: [0, 2, 4]},
+        {word: 'KAMBING', emoji: '🐐', missing: [0, 3, 5]},
+        {word: 'AYAM', emoji: '🐔', missing: [0, 2]},
+        {word: 'BEBEK', emoji: '🦆', missing: [0, 2, 4]}
+      ]
+    };
+
+    const mazeLevels = [
+      {start: [0,0], end: [3,3], obstacles: [[1,1], [2,2]]},
+      {start: [0,0], end: [3,3], obstacles: [[1,0], [2,1], [1,3]]},
+      {start: [3,0], end: [0,3], obstacles: [[2,1], [1,2]]},
+      {start: [0,3], end: [3,0], obstacles: [[1,2], [2,2]]},
+      {start: [0,0], end: [3,3], obstacles: [[0,2], [2,0], [3,1]]},
+      {start: [3,3], end: [0,0], obstacles: [[1,1], [2,1]]},
+      {start: [0,1], end: [3,2], obstacles: [[1,1], [2,2]]},
+      {start: [1,0], end: [2,3], obstacles: [[1,2], [2,1]]},
+      {start: [0,0], end: [3,3], obstacles: [[1,0], [0,1], [3,2]]},
+      {start: [3,0], end: [0,3], obstacles: [[2,0], [1,1], [2,3]]}
+    ];
+
+    const puzzleData = [
+      ['🐱', '🐰', '🐻', '🐼'],
+      ['🍎', '🍊', '🍇', '🍓'],
+      ['⚽', '🏀', '🎾', '⚾'],
+      ['🌸', '🌺', '🌻', '🌷'],
+      ['🚗', '🚕', '🚙', '🚌'],
+      ['🎨', '🎭', '🎪', '🎬'],
+      ['🏠', '🏫', '🏥', '🏦'],
+      ['☀️', '🌙', '⭐', '⛅'],
+      ['🍕', '🍔', '🌭', '🍟'],
+      ['📚', '✏️', '📝', '🎒']
+    ];
+
+    const memoryData = [
+      ['🐱', '🐰', '🐻', '🐼', '🦁', '🐯', '🦊', '🐶'],
+      ['🍎', '🍊', '🍇', '🍓', '🍌', '🍒', '🍑', '🍉'],
+      ['⚽', '🏀', '🎾', '⚾', '🏈', '🏐', '🎱', '🏓'],
+      ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑'],
+      ['🌸', '🌺', '🌻', '🌷', '🌹', '🏵️', '💐', '🌼']
+    ];
+
+    const shapeData = ['🔴', '🔵', '🟡', '🟢', '🟣', '🔷', '⭐', '💚', '🟠', '🟣'];
+
+    // Data SDK Handler
+    const dataHandler = {
+      onDataChanged(data) {
+        // Store scores for history
+      }
+    };
+
+    async function initDataSdk() {
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          console.error("Failed to initialize Data SDK");
+        }
+      }
+    }
+
+    async function saveScore(playerName, gameType, score) {
+      if (window.dataSdk) {
+        const result = await window.dataSdk.create({
+          player_name: playerName,
+          game_type: gameType,
+          score: score,
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    function renderPage() {
+      const container = document.getElementById('mainContainer');
+      const config = window.elementSdk?.config || defaultConfig;
+      
+      if (currentPage === 'welcome') {
+        container.innerHTML = `
+          <div class="w-full h-full flex items-center justify-center p-8" style="background: linear-gradient(135deg, ${config.background_color || defaultConfig.background_color} 0%, ${config.secondary_color || defaultConfig.secondary_color} 50%, #f093fb 100%);">
+            <div class="text-center max-w-2xl">
+              <div class="float-animation mb-8">
+                <h1 id="welcomeTitle" class="text-7xl font-bold mb-4" style="color: ${config.surface_color || defaultConfig.surface_color}; text-shadow: 3px 3px 6px rgba(0,0,0,0.3); font-family: ${config.font_family || defaultConfig.font_family}, cursive, sans-serif; font-size: ${(config.font_size || defaultConfig.font_size) * 4.375}px;">${config.welcome_title || defaultConfig.welcome_title}</h1>
+              </div>
+              <p id="welcomeSubtitle" class="text-3xl mb-12 font-bold" style="color: ${config.surface_color || defaultConfig.surface_color}; font-family: ${config.font_family || defaultConfig.font_family}, cursive, sans-serif; font-size: ${(config.font_size || defaultConfig.font_size) * 1.875}px;">${config.welcome_subtitle || defaultConfig.welcome_subtitle}</p>
+              
+              <div class="mb-8">
+                <div class="inline-block float-animation mx-8" style="animation-delay: 0.2s;">
+                  <span class="text-6xl">📚</span>
+                </div>
+                <div class="inline-block float-animation" style="animation-delay: 0.4s;">
+                  <span class="text-6xl">🎮</span>
+                </div>
+              </div>
+              
+              <div class="rounded-3xl p-8 shadow-2xl mb-8" style="background-color: ${config.surface_color || defaultConfig.surface_color};">
+                <label for="playerNameInput" class="block text-2xl font-bold mb-4" style="color: ${config.text_color || defaultConfig.text_color};">Siapa nama kamu? 😊</label>
+                <input type="text" id="playerNameInput" class="w-full px-6 py-4 text-2xl border-4 rounded-2xl focus:outline-none text-center font-bold" style="border-color: ${config.background_color || defaultConfig.background_color};" placeholder="Tulis nama kamu di sini...">
+              </div>
+              
+              <button id="startButton" class="glow-animation pulse-animation text-3xl font-bold px-12 py-6 rounded-full shadow-2xl hover:scale-110 transition-all duration-300" style="background: linear-gradient(to right, ${config.accent_color || defaultConfig.accent_color}, #f97316); color: ${config.surface_color || defaultConfig.surface_color}; font-family: ${config.font_family || defaultConfig.font_family}, cursive, sans-serif;">
+                ${config.start_button_text || defaultConfig.start_button_text} 🚀
+              </button>
+            </div>
+          </div>
+        `;
+        
+        document.getElementById('startButton').onclick = () => {
+          const name = document.getElementById('playerNameInput').value.trim();
+          if (name) {
+            playerName = name;
+            currentPage = 'modeSelection';
+            renderPage();
+          } else {
+            const input = document.getElementById('playerNameInput');
+            input.classList.add('bounce-animation');
+            input.style.borderColor = '#ef4444';
+            setTimeout(() => {
+              input.classList.remove('bounce-animation');
+              input.style.borderColor = config.background_color || defaultConfig.background_color;
+            }, 600);
+          }
+        };
+      }
+      else if (currentPage === 'modeSelection') {
+        container.innerHTML = `
+          <div class="w-full h-full flex items-center justify-center p-8" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="max-w-4xl w-full">
+              <h1 class="text-6xl font-bold text-white text-center mb-12" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">Hai ${playerName}! 👋</h1>
+              <h2 class="text-4xl font-bold text-white text-center mb-12">Pilih Mode Bermain:</h2>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card-hover bg-white rounded-3xl p-8 shadow-2xl cursor-pointer text-center" onclick="selectMode(false)">
+                  <div class="text-8xl mb-6">🎮</div>
+                  <h3 class="text-3xl font-bold text-gray-800 mb-4">Bermain Sendiri</h3>
+                  <p class="text-xl text-gray-600">Mainkan semua game dengan kecepatan kamu sendiri!</p>
+                </div>
+                
+                <div class="card-hover bg-white rounded-3xl p-8 shadow-2xl cursor-pointer text-center" onclick="selectMode(true)">
+                  <div class="text-8xl mb-6">👥</div>
+                  <h3 class="text-3xl font-bold text-gray-800 mb-4">Mode 2 Pemain</h3>
+                  <p class="text-xl text-gray-600">Bermain bersama teman dan lihat siapa yang menang!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      else if (currentPage === 'multiplayerSetup') {
+        container.innerHTML = `
+          <div class="w-full h-full flex items-center justify-center p-8" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <div class="max-w-2xl w-full">
+              <h1 class="text-6xl font-bold text-white text-center mb-12" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">Setup Pemain 👥</h1>
+              
+              <div class="bg-white rounded-3xl p-8 shadow-2xl mb-8">
+                <div class="mb-6">
+                  <label class="block text-2xl font-bold text-gray-700 mb-4">👤 Nama Pemain 1:</label>
+                  <input type="text" id="player1Input" class="w-full px-6 py-4 text-2xl border-4 border-blue-300 rounded-2xl focus:outline-none focus:border-blue-500 text-center font-bold" placeholder="Nama pemain pertama...">
+                </div>
+                
+                <div>
+                  <label class="block text-2xl font-bold text-gray-700 mb-4">👤 Nama Pemain 2:</label>
+                  <input type="text" id="player2Input" class="w-full px-6 py-4 text-2xl border-4 border-green-300 rounded-2xl focus:outline-none focus:border-green-500 text-center font-bold" placeholder="Nama pemain kedua...">
+                </div>
+              </div>
+              
+              <button id="startMultiplayerButton" class="w-full glow-animation pulse-animation bg-gradient-to-r from-purple-500 to-pink-500 text-white text-3xl font-bold px-12 py-6 rounded-full shadow-2xl hover:scale-105 transition-all duration-300">
+                Mulai Permainan! 🎮
+              </button>
+            </div>
+          </div>
+        `;
+        
+        document.getElementById('startMultiplayerButton').onclick = () => {
+          const p1 = document.getElementById('player1Input').value.trim();
+          const p2 = document.getElementById('player2Input').value.trim();
+          
+          if (p1 && p2) {
+            player1Name = p1;
+            player2Name = p2;
+            currentPage = 'gameMenu';
+            renderPage();
+          } else {
+            if (!p1) {
+              const input1 = document.getElementById('player1Input');
+              input1.classList.add('bounce-animation');
+              input1.style.borderColor = '#ef4444';
+              setTimeout(() => {
+                input1.classList.remove('bounce-animation');
+                input1.style.borderColor = '#93c5fd';
+              }, 600);
+            }
+            if (!p2) {
+              const input2 = document.getElementById('player2Input');
+              input2.classList.add('bounce-animation');
+              input2.style.borderColor = '#ef4444';
+              setTimeout(() => {
+                input2.classList.remove('bounce-animation');
+                input2.style.borderColor = '#86efac';
+              }, 600);
+            }
+          }
+        };
+      }
+      else if (currentPage === 'gameMenu') {
+        const games = [
+          {name: 'Menghitung', emoji: '🔢', color: 'from-blue-400 to-blue-600', border: 'border-blue-500', id: 'countingLevelSelect'},
+          {name: 'Melengkapi Kata', emoji: '✏️', color: 'from-green-400 to-green-600', border: 'border-green-500', id: 'wordsLevelSelect'},
+          {name: 'Coding Maze', emoji: '🚶', color: 'from-purple-400 to-purple-600', border: 'border-purple-500', id: 'maze'},
+          {name: 'Puzzle Gambar', emoji: '🧩', color: 'from-pink-400 to-pink-600', border: 'border-pink-500', id: 'puzzle'},
+          {name: 'Memory Match', emoji: '🃏', color: 'from-yellow-400 to-orange-500', border: 'border-orange-500', id: 'memory'},
+          {name: 'Warna & Bentuk', emoji: '🔷', color: 'from-indigo-400 to-indigo-600', border: 'border-indigo-500', id: 'shapes'},
+          {name: 'Berhitung Mundur', emoji: '🔟', color: 'from-red-400 to-red-600', border: 'border-red-500', id: 'countdown'}
+        ];
+        
+        let multiplayerHeader = '';
+        if (isMultiplayer) {
+          const p1Active = currentPlayer === 1 ? 'ring-4 ring-yellow-400' : '';
+          const p2Active = currentPlayer === 2 ? 'ring-4 ring-yellow-400' : '';
+          multiplayerHeader = `
+            <div class="bg-white rounded-3xl p-6 shadow-2xl mb-8">
+              <div class="grid grid-cols-2 gap-6">
+                <div class="text-center p-4 bg-blue-100 rounded-2xl ${p1Active}">
+                  <p class="text-2xl font-bold text-gray-700">👤 ${player1Name}</p>
+                  <p class="text-4xl font-bold text-blue-600 mt-2">⭐ ${player1Score}</p>
+                </div>
+                <div class="text-center p-4 bg-green-100 rounded-2xl ${p2Active}">
+                  <p class="text-2xl font-bold text-gray-700">👤 ${player2Name}</p>
+                  <p class="text-4xl font-bold text-green-600 mt-2">⭐ ${player2Score}</p>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        container.innerHTML = `
+          <div class="w-full h-full overflow-auto p-8" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="max-w-6xl mx-auto">
+              <h1 class="text-6xl font-bold text-white text-center mb-8" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">🎮 Pilih Permainan 🎮</h1>
+              
+              ${multiplayerHeader}
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${games.map(game => `
+                  <div class="card-hover bg-white rounded-3xl p-6 shadow-2xl cursor-pointer border-4 ${game.border}" onclick="startGame('${game.id}')">
+                    <div class="text-center">
+                      <div class="text-7xl mb-4">${game.emoji}</div>
+                      <h3 class="text-2xl font-bold text-gray-800 mb-2">${game.name}</h3>
+                      <div class="bg-gradient-to-r ${game.color} text-white font-bold py-2 px-4 rounded-full text-lg">
+                        Mainkan!
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+              
+              <div class="text-center mt-8">
+                <button onclick="backToWelcome()" class="bg-white text-gray-700 text-xl font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+                  ⬅️ Kembali
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      else if (currentPage === 'countingLevelSelect') {
+        renderCountingLevelSelect();
+      }
+      else if (currentPage === 'counting') {
+        renderCountingGame();
+      }
+      else if (currentPage === 'wordsLevelSelect') {
+        renderWordsLevelSelect();
+      }
+      else if (currentPage === 'words') {
+        renderWordsGame();
+      }
+      else if (currentPage === 'maze') {
+        renderMazeGame();
+      }
+      else if (currentPage === 'puzzle') {
+        renderPuzzleGame();
+      }
+      else if (currentPage === 'memory') {
+        renderMemoryGame();
+      }
+      else if (currentPage === 'shapes') {
+        renderShapesGame();
+      }
+      else if (currentPage === 'countdown') {
+        renderCountdownGame();
+      }
+      else if (currentPage === 'reward') {
+        renderRewardPage();
+      }
+    }
+
+    function renderCountingLevelSelect() {
+      let multiplayerHeader = '';
+      if (isMultiplayer) {
+        const p1Active = currentPlayer === 1 ? 'ring-4 ring-yellow-400' : '';
+        const p2Active = currentPlayer === 2 ? 'ring-4 ring-yellow-400' : '';
+        multiplayerHeader = `
+          <div class="bg-white rounded-3xl p-6 shadow-2xl mb-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="text-center p-4 bg-blue-100 rounded-2xl ${p1Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player1Name}</p>
+                <p class="text-3xl font-bold text-blue-600">⭐ ${player1Score}</p>
+              </div>
+              <div class="text-center p-4 bg-green-100 rounded-2xl ${p2Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player2Name}</p>
+                <p class="text-3xl font-bold text-green-600">⭐ ${player2Score}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      const container = document.getElementById('mainContainer');
+      container.innerHTML = `
+        <div class="w-full h-full overflow-auto p-8" style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-5xl font-bold text-white text-center mb-6" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">🔢 Pilih Level Menghitung 🔢</h1>
+            
+            ${multiplayerHeader}
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div class="card-hover bg-white rounded-3xl p-8 shadow-2xl cursor-pointer text-center border-4 border-green-400" onclick="selectCountingLevel(1)">
+                <div class="text-6xl mb-4">🌱</div>
+                <h3 class="text-3xl font-bold text-green-600 mb-2">Level 1</h3>
+                <p class="text-xl text-gray-600">Mudah</p>
+                <p class="text-lg text-gray-500">Hitung 3-5 benda</p>
+              </div>
+              
+              <div class="card-hover bg-white rounded-3xl p-8 shadow-2xl cursor-pointer text-center border-4 border-yellow-400" onclick="selectCountingLevel(2)">
+                <div class="text-6xl mb-4">🌟</div>
+                <h3 class="text-3xl font-bold text-yellow-600 mb-2">Level 2</h3>
+                <p class="text-xl text-gray-600">Sedang</p>
+                <p class="text-lg text-gray-500">Hitung 6-8 benda</p>
+              </div>
+              
+              <div class="card-hover bg-white rounded-3xl p-8 shadow-2xl cursor-pointer text-center border-4 border-red-400" onclick="selectCountingLevel(3)">
+                <div class="text-6xl mb-4">🔥</div>
+                <h3 class="text-3xl font-bold text-red-600 mb-2">Level 3</h3>
+                <p class="text-xl text-gray-600">Sulit</p>
+                <p class="text-lg text-gray-500">Hitung 9-12 benda</p>
+              </div>
+            </div>
+            
+            <div class="text-center">
+              <button onclick="backToGameMenu()" class="bg-white text-gray-700 text-xl font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+                ⬅️ Kembali ke Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectCountingLevel(level) {
+      gameData.countingLevel = level;
+      currentQuestionIndex = 0;
+      currentPage = 'counting';
+      currentGame = 'counting';
+      renderPage();
+    }
+
+    function renderCountingGame() {
+      if (currentQuestionIndex >= 15) {
+        finishGame();
+        return;
+      }
+      
+      const level = gameData.countingLevel || 1;
+      let minCount, maxCount;
+      
+      if (level === 1) {
+        minCount = 3;
+        maxCount = 5;
+      } else if (level === 2) {
+        minCount = 6;
+        maxCount = 8;
+      } else {
+        minCount = 9;
+        maxCount = 12;
+      }
+      
+      const emojiIndex = currentQuestionIndex % countingEmojis.length;
+      const emoji = countingEmojis[emojiIndex];
+      const count = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+      const correctAnswer = count;
+      
+      const wrongAnswer1 = correctAnswer + (Math.random() > 0.5 ? 1 : -1);
+      const wrongAnswer2 = correctAnswer + (Math.random() > 0.5 ? 2 : -2);
+      
+      const answers = [correctAnswer, wrongAnswer1, wrongAnswer2].sort(() => Math.random() - 0.5);
+      
+      const emojis = Array(count).fill(emoji);
+      
+      let multiplayerHeader = '';
+      if (isMultiplayer) {
+        const currentPlayerName = currentPlayer === 1 ? player1Name : player2Name;
+        const p1Active = currentPlayer === 1 ? 'ring-4 ring-yellow-400' : '';
+        const p2Active = currentPlayer === 2 ? 'ring-4 ring-yellow-400' : '';
+        multiplayerHeader = `
+          <div class="bg-white rounded-3xl p-6 shadow-2xl mb-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="text-center p-4 bg-blue-100 rounded-2xl ${p1Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player1Name}</p>
+                <p class="text-3xl font-bold text-blue-600">⭐ ${player1Score}</p>
+              </div>
+              <div class="text-center p-4 bg-green-100 rounded-2xl ${p2Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player2Name}</p>
+                <p class="text-3xl font-bold text-green-600">⭐ ${player2Score}</p>
+              </div>
+            </div>
+            <p class="text-center text-2xl font-bold text-purple-600 mt-4">Giliran: ${currentPlayerName}</p>
+          </div>
+        `;
+      }
+      
+      const container = document.getElementById('mainContainer');
+      container.innerHTML = `
+        <div class="w-full h-full overflow-auto p-8" style="background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-5xl font-bold text-white text-center mb-6" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">🔢 Menghitung Level ${level} 🔢</h1>
+            
+            ${multiplayerHeader}
+            
+            <div class="bg-white rounded-3xl p-8 shadow-2xl text-center mb-6">
+              <p class="text-3xl font-bold text-gray-700 mb-4">Soal ${currentQuestionIndex + 1} dari 15</p>
+              <p class="text-2xl font-bold text-blue-600 mb-8">Berapa jumlah ${emoji} di bawah ini?</p>
+              
+              <div id="emojiContainer" class="flex flex-wrap justify-center gap-4 mb-8">
+                ${emojis.map((e, i) => `<span class="text-6xl pop-in" style="animation-delay: ${i * 0.1}s">${e}</span>`).join('')}
+              </div>
+              
+              <div class="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+                ${answers.map(ans => `
+                  <button class="card-hover bg-gradient-to-r from-blue-400 to-blue-600 text-white text-4xl font-bold py-8 rounded-3xl shadow-lg" onclick="checkCountingAnswer(${ans}, ${correctAnswer})">
+                    ${ans}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            
+            <div class="text-center">
+              <button onclick="backToLevelSelect('countingLevelSelect')" class="bg-white text-gray-700 text-xl font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+                ⬅️ Kembali
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function checkCountingAnswer(selected, correct) {
+      if (selected === correct) {
+        if (isMultiplayer) {
+          if (currentPlayer === 1) player1Score++;
+          else player2Score++;
+        }
+        showCorrectPopup();
+        
+        setTimeout(() => {
+          currentQuestionIndex++;
+          if (isMultiplayer) {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+          }
+          renderCountingGame();
+        }, 1500);
+      } else {
+        showWrongPopup();
+      }
+    }
+
+    function renderWordsLevelSelect() {
+      let multiplayerHeader = '';
+      if (isMultiplayer) {
+        const p1Active = currentPlayer === 1 ? 'ring-4 ring-yellow-400' : '';
+        const p2Active = currentPlayer === 2 ? 'ring-4 ring-yellow-400' : '';
+        multiplayerHeader = `
+          <div class="bg-white rounded-3xl p-6 shadow-2xl mb-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="text-center p-4 bg-blue-100 rounded-2xl ${p1Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player1Name}</p>
+                <p class="text-3xl font-bold text-blue-600">⭐ ${player1Score}</p>
+              </div>
+              <div class="text-center p-4 bg-green-100 rounded-2xl ${p2Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player2Name}</p>
+                <p class="text-3xl font-bold text-green-600">⭐ ${player2Score}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      const container = document.getElementById('mainContainer');
+      container.innerHTML = `
+        <div class="w-full h-full overflow-auto p-8" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-5xl font-bold text-white text-center mb-6" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">✏️ Pilih Level Melengkapi Kata ✏️</h1>
+            
+            ${multiplayerHeader}
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div class="card-hover bg-white rounded-3xl p-8 shadow-2xl cursor-pointer text-center border-4 border-green-400" onclick="selectWordsLevel(1)">
+                <div class="text-6xl mb-4">📝</div>
+                <h3 class="text-3xl font-bold text-green-600 mb-2">Level 1</h3>
+                <p class="text-xl text-gray-600">Mudah</p>
+                <p class="text-lg text-gray-500">Lengkapi 1 huruf</p>
+                <p class="text-md text-gray-400 mt-2">A_EL</p>
+              </div>
+              
+              <div class="card-hover bg-white rounded-3xl p-8 shadow-2xl cursor-pointer text-center border-4 border-yellow-400" onclick="selectWordsLevel(2)">
+                <div class="text-6xl mb-4">✍️</div>
+                <h3 class="text-3xl font-bold text-yellow-600 mb-2">Level 2</h3>
+                <p class="text-xl text-gray-600">Sedang</p>
+                <p class="text-lg text-gray-500">Lengkapi 2 huruf</p>
+                <p class="text-md text-gray-400 mt-2">_O_A</p>
+              </div>
+              
+              <div class="card-hover bg-white rounded-3xl p-8 shadow-2xl cursor-pointer text-center border-4 border-red-400" onclick="selectWordsLevel(3)">
+                <div class="text-6xl mb-4">📖</div>
+                <h3 class="text-3xl font-bold text-red-600 mb-2">Level 3</h3>
+                <p class="text-xl text-gray-600">Sulit</p>
+                <p class="text-lg text-gray-500">Lengkapi 3 huruf</p>
+                <p class="text-md text-gray-400 mt-2">_E_I_I</p>
+              </div>
+            </div>
+            
+            <div class="text-center">
+              <button onclick="backToGameMenu()" class="bg-white text-gray-700 text-xl font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+                ⬅️ Kembali ke Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectWordsLevel(level) {
+      gameData.wordsLevel = level;
+      gameData.selectedLetters = null;
+      gameData.currentMissingStep = 0;
+      currentQuestionIndex = 0;
+      currentPage = 'words';
+      currentGame = 'words';
+      renderPage();
+    }
+
+    function renderWordsGame() {
+      if (currentQuestionIndex >= 15) {
+        finishGame();
+        return;
+      }
+      
+      const level = gameData.wordsLevel || 1;
+      let levelData;
+      
+      if (level === 1) levelData = wordLevels.level1;
+      else if (level === 2) levelData = wordLevels.level2;
+      else levelData = wordLevels.level3;
+      
+      const word = levelData[currentQuestionIndex];
+      const missingIndices = word.missing;
+      const missingLetters = missingIndices.map(i => word.word[i]);
+      
+      const allLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+      
+      if (!gameData.selectedLetters) {
+        gameData.selectedLetters = Array(missingLetters.length).fill(null);
+      }
+      if (gameData.currentMissingStep === undefined) {
+        gameData.currentMissingStep = 0;
+      }
+      
+      if (gameData.currentMissingStep < missingLetters.length) {
+        const currentMissingLetter = missingLetters[gameData.currentMissingStep];
+        
+        const wrongLetters = allLetters.filter(l => l !== currentMissingLetter);
+        const shuffled = wrongLetters.sort(() => Math.random() - 0.5);
+        const options = [currentMissingLetter, shuffled[0], shuffled[1]].sort(() => Math.random() - 0.5);
+        
+        let displayWithSelections = word.word.split('').map((letter, i) => {
+          if (!missingIndices.includes(i)) return letter;
+          const missingIdx = missingIndices.indexOf(i);
+          return gameData.selectedLetters[missingIdx] || '_';
+        }).join(' ');
+        
+        let multiplayerHeader = '';
+        if (isMultiplayer) {
+          const currentPlayerName = currentPlayer === 1 ? player1Name : player2Name;
+          const p1Active = currentPlayer === 1 ? 'ring-4 ring-yellow-400' : '';
+          const p2Active = currentPlayer === 2 ? 'ring-4 ring-yellow-400' : '';
+          multiplayerHeader = `
+            <div class="bg-white rounded-3xl p-6 shadow-2xl mb-6">
+              <div class="grid grid-cols-2 gap-6">
+                <div class="text-center p-4 bg-blue-100 rounded-2xl ${p1Active}">
+                  <p class="text-xl font-bold text-gray-700">👤 ${player1Name}</p>
+                  <p class="text-3xl font-bold text-blue-600">⭐ ${player1Score}</p>
+                </div>
+                <div class="text-center p-4 bg-green-100 rounded-2xl ${p2Active}">
+                  <p class="text-xl font-bold text-gray-700">👤 ${player2Name}</p>
+                  <p class="text-3xl font-bold text-green-600">⭐ ${player2Score}</p>
+                </div>
+              </div>
+              <p class="text-center text-2xl font-bold text-purple-600 mt-4">Giliran: ${currentPlayerName}</p>
+            </div>
+          `;
+        }
+        
+        const progressText = missingLetters.length > 1 ? `<p class="text-xl font-bold text-purple-600 mb-4">Huruf ke-${gameData.currentMissingStep + 1} dari ${missingLetters.length}</p>` : '';
+        
+        const container = document.getElementById('mainContainer');
+        container.innerHTML = `
+          <div class="w-full h-full overflow-auto p-8" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+            <div class="max-w-4xl mx-auto">
+              <h1 class="text-5xl font-bold text-white text-center mb-6" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">✏️ Melengkapi Kata Level ${level} ✏️</h1>
+              
+              ${multiplayerHeader}
+              
+              <div class="bg-white rounded-3xl p-8 shadow-2xl text-center mb-6">
+                <p class="text-3xl font-bold text-gray-700 mb-4">Soal ${currentQuestionIndex + 1} dari 15</p>
+                ${progressText}
+                <p class="text-2xl font-bold text-pink-600 mb-8">Pilih huruf yang tepat!</p>
+                
+                <div class="text-9xl mb-8">${word.emoji}</div>
+                
+                <div class="text-6xl font-bold text-blue-600 mb-12 tracking-widest">${displayWithSelections}</div>
+                
+                <div class="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+                  ${options.map(letter => `
+                    <button class="card-hover bg-gradient-to-r from-pink-400 to-red-500 text-white text-5xl font-bold py-8 rounded-3xl shadow-lg" onclick="selectWordLetter('${letter}', '${currentMissingLetter}')">
+                      ${letter}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+              
+              <div class="text-center">
+                <button onclick="backToLevelSelect('wordsLevelSelect')" class="bg-white text-gray-700 text-xl font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+                  ⬅️ Kembali
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        checkCompleteWord();
+      }
+    }
+
+    function selectWordLetter(selected, correct) {
+      if (selected === correct) {
+        gameData.selectedLetters[gameData.currentMissingStep] = selected;
+        gameData.currentMissingStep++;
+        renderWordsGame();
+      } else {
+        showWrongPopup();
+      }
+    }
+    
+    function checkCompleteWord() {
+      if (isMultiplayer) {
+        if (currentPlayer === 1) player1Score++;
+        else player2Score++;
+      }
+      showCorrectPopup();
+      
+      setTimeout(() => {
+        currentQuestionIndex++;
+        gameData.selectedLetters = null;
+        gameData.currentMissingStep = 0;
+        if (isMultiplayer) {
+          currentPlayer = currentPlayer === 1 ? 2 : 1;
+        }
+        renderWordsGame();
+      }, 1500);
+    }
+
+    function renderMazeGame() {
+      if (currentLevel >= 10) {
+        finishGame();
+        return;
+      }
+      
+      const level = mazeLevels[currentLevel];
+      gameData.robotPos = [...level.start];
+      gameData.endPos = level.end;
+      gameData.obstacles = level.obstacles;
+      
+      let multiplayerHeader = '';
+      if (isMultiplayer) {
+        const currentPlayerName = currentPlayer === 1 ? player1Name : player2Name;
+        const p1Active = currentPlayer === 1 ? 'ring-4 ring-yellow-400' : '';
+        const p2Active = currentPlayer === 2 ? 'ring-4 ring-yellow-400' : '';
+        multiplayerHeader = `
+          <div class="bg-white rounded-3xl p-6 shadow-2xl mb-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="text-center p-4 bg-blue-100 rounded-2xl ${p1Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player1Name}</p>
+                <p class="text-3xl font-bold text-blue-600">⭐ ${player1Score}</p>
+              </div>
+              <div class="text-center p-4 bg-green-100 rounded-2xl ${p2Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player2Name}</p>
+                <p class="text-3xl font-bold text-green-600">⭐ ${player2Score}</p>
+              </div>
+            </div>
+            <p class="text-center text-2xl font-bold text-purple-600 mt-4">Giliran: ${currentPlayerName}</p>
+          </div>
+        `;
+      }
+      
+      const container = document.getElementById('mainContainer');
+      container.innerHTML = `
+        <div class="w-full h-full overflow-auto p-8" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-5xl font-bold text-white text-center mb-6" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">🚶 Coding Maze 🚶</h1>
+            
+            ${multiplayerHeader}
+            
+            <div class="bg-white rounded-3xl p-8 shadow-2xl text-center mb-6">
+              <p class="text-3xl font-bold text-gray-700 mb-4">Level ${currentLevel + 1} dari 10</p>
+              <p class="text-2xl font-bold text-orange-600 mb-8">Bantu robot 🚶 sampai ke rumah 🏠!</p>
+              
+              <div id="mazeGrid" class="grid grid-cols-4 gap-3 max-w-md mx-auto mb-8">
+              </div>
+              
+              <div class="grid grid-cols-4 gap-4 max-w-md mx-auto mb-6">
+                <button class="card-hover bg-gradient-to-r from-blue-400 to-blue-600 text-white text-4xl font-bold py-6 rounded-2xl shadow-lg" onclick="moveRobot(-1, 0)">⬆️</button>
+                <button class="card-hover bg-gradient-to-r from-blue-400 to-blue-600 text-white text-4xl font-bold py-6 rounded-2xl shadow-lg" onclick="moveRobot(1, 0)">⬇️</button>
+                <button class="card-hover bg-gradient-to-r from-blue-400 to-blue-600 text-white text-4xl font-bold py-6 rounded-2xl shadow-lg" onclick="moveRobot(0, -1)">⬅️</button>
+                <button class="card-hover bg-gradient-to-r from-blue-400 to-blue-600 text-white text-4xl font-bold py-6 rounded-2xl shadow-lg" onclick="moveRobot(0, 1)">➡️</button>
+              </div>
+              
+              <button onclick="resetMaze()" class="bg-gradient-to-r from-red-400 to-red-600 text-white text-xl font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+                🔄 Reset
+              </button>
+            </div>
+            
+            <div class="text-center">
+              <button onclick="backToGameMenu()" class="bg-white text-gray-700 text-xl font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+                ⬅️ Kembali ke Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      updateMazeGrid();
+    }
+
+    function updateMazeGrid() {
+      const grid = document.getElementById('mazeGrid');
+      if (!grid) return;
+      
+      grid.innerHTML = '';
+      
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 4; col++) {
+          const cell = document.createElement('div');
+          cell.className = 'w-20 h-20 flex items-center justify-center text-5xl rounded-2xl shadow-md';
+          
+          const isRobot = gameData.robotPos[0] === row && gameData.robotPos[1] === col;
+          const isEnd = gameData.endPos[0] === row && gameData.endPos[1] === col;
+          const isObstacle = gameData.obstacles.some(obs => obs[0] === row && obs[1] === col);
+          
+          if (isRobot) {
+            cell.style.backgroundColor = '#bfdbfe';
+            cell.textContent = '🚶';
+          } else if (isEnd) {
+            cell.style.backgroundColor = '#bbf7d0';
+            cell.textContent = '🏠';
+          } else if (isObstacle) {
+            cell.style.backgroundColor = '#fed7aa';
+            cell.textContent = '🌳';
+          } else {
+            cell.style.backgroundColor = '#f3f4f6';
+          }
+          
+          grid.appendChild(cell);
+        }
+      }
+    }
+
+    function moveRobot(deltaRow, deltaCol) {
+      const newRow = gameData.robotPos[0] + deltaRow;
+      const newCol = gameData.robotPos[1] + deltaCol;
+      
+      if (newRow < 0 || newRow >= 4 || newCol < 0 || newCol >= 4) {
+        showErrorAnimation();
+        return;
+      }
+      
+      const isObstacle = gameData.obstacles.some(obs => obs[0] === newRow && obs[1] === newCol);
+      if (isObstacle) {
+        showErrorAnimation();
+        return;
+      }
+      
+      gameData.robotPos = [newRow, newCol];
+      updateMazeGrid();
+      
+      if (newRow === gameData.endPos[0] && newCol === gameData.endPos[1]) {
+        if (isMultiplayer) {
+          if (currentPlayer === 1) player1Score++;
+          else player2Score++;
+        }
+        showCorrectPopup();
+        setTimeout(() => {
+          currentLevel++;
+          if (isMultiplayer) {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+          }
+          renderMazeGame();
+        }, 1500);
+      }
+    }
+
+    function resetMaze() {
+      const level = mazeLevels[currentLevel];
+      gameData.robotPos = [...level.start];
+      updateMazeGrid();
+    }
+
+    function renderPuzzleGame() {
+      if (currentLevel >= 10) {
+        finishGame();
+        return;
+      }
+      
+      const correctPuzzle = [...puzzleData[currentLevel]];
+      gameData.puzzle = [...correctPuzzle].sort(() => Math.random() - 0.5);
+      gameData.correctPuzzle = correctPuzzle;
+      gameData.selectedIndex = -1;
+      
+      let multiplayerHeader = '';
+      if (isMultiplayer) {
+        const currentPlayerName = currentPlayer === 1 ? player1Name : player2Name;
+        const p1Active = currentPlayer === 1 ? 'ring-4 ring-yellow-400' : '';
+        const p2Active = currentPlayer === 2 ? 'ring-4 ring-yellow-400' : '';
+        multiplayerHeader = `
+          <div class="bg-white rounded-3xl p-6 shadow-2xl mb-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="text-center p-4 bg-blue-100 rounded-2xl ${p1Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player1Name}</p>
+                <p class="text-3xl font-bold text-blue-600">⭐ ${player1Score}</p>
+              </div>
+              <div class="text-center p-4 bg-green-100 rounded-2xl ${p2Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player2Name}</p>
+                <p class="text-3xl font-bold text-green-600">⭐ ${player2Score}</p>
+              </div>
+            </div>
+            <p class="text-center text-2xl font-bold text-purple-600 mt-4">Giliran: ${currentPlayerName}</p>
+          </div>
+        `;
+      }
+      
+      const container = document.getElementById('mainContainer');
+      container.innerHTML = `
+        <div class="w-full h-full overflow-auto p-8" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+          <div class="max-w-6xl mx-auto">
+            <h1 class="text-5xl font-bold text-white text-center mb-6" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">🧩 Puzzle Gambar 🧩</h1>
+            
+            ${multiplayerHeader}
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div class="bg-white rounded-3xl p-8 shadow-2xl">
+                <h3 class="text-3xl font-bold text-purple-600 mb-6 text-center">✨ Urutan yang Benar ✨</h3>
+                <div class="grid grid-cols-2 gap-4">
+                  ${correctPuzzle.map((emoji, i) => `
+                    <div id="hintCard${i}" class="bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl p-6 text-center shadow-md border-4 border-purple-300 cursor-pointer card-hover" onclick="revealHint(${i}, '${emoji}')">
+                      <div class="text-7xl mb-2">❓</div>
+                      <div class="text-2xl font-bold text-purple-600">Posisi ${i + 1}</div>
+                    </div>
+                  `).join('')}
+                </div>
+                <p class="text-center text-lg text-gray-600 mt-4">👆 Klik ❓ untuk melihat petunjuk</p>
+              </div>
+              
+              <div class="bg-white rounded-3xl p-8 shadow-2xl">
+                <h3 class="text-3xl font-bold text-teal-600 mb-4 text-center">🎯 Susun Di Sini 🎯</h3>
+                <p class="text-xl text-gray-600 mb-6 text-center">Klik 2 gambar untuk menukar</p>
+                
+                <div id="puzzleGrid" class="grid grid-cols-2 gap-4 mb-8">
+                </div>
+                
+                <button onclick="checkPuzzle()" class="w-full bg-gradient-to-r from-green-400 to-green-600 text-white text-3xl font-bold px-12 py-6 rounded-full shadow-lg hover:scale-105 transition-all glow-animation">
+                  ✓ Cek Jawaban
+                </button>
+              </div>
+            </div>
+            
+            <div class="text-center mt-8">
+              <button onclick="backToGameMenu()" class="bg-white text-gray-700 text-xl font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+                ⬅️ Kembali ke Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      updatePuzzleGrid();
+    }
+
+    function updatePuzzleGrid() {
+      const grid = document.getElementById('puzzleGrid');
+      if (!grid) return;
+      
+      grid.innerHTML = '';
+      
+      gameData.puzzle.forEach((emoji, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'w-32 h-32 flex items-center justify-center text-7xl bg-blue-100 rounded-2xl shadow-lg cursor-pointer card-hover';
+        cell.textContent = emoji;
+        cell.onclick = () => selectPuzzlePiece(index);
+        
+        if (gameData.selectedIndex === index) {
+          cell.style.backgroundColor = '#fef08a';
+          cell.classList.add('ring-4', 'ring-yellow-400');
+        }
+        
+        grid.appendChild(cell);
+      });
+    }
+
+    function selectPuzzlePiece(index) {
+      if (gameData.selectedIndex === -1) {
+        gameData.selectedIndex = index;
+      } else {
+        const temp = gameData.puzzle[gameData.selectedIndex];
+        gameData.puzzle[gameData.selectedIndex] = gameData.puzzle[index];
+        gameData.puzzle[index] = temp;
+        gameData.selectedIndex = -1;
+      }
+      updatePuzzleGrid();
+    }
+
+    function revealHint(index, emoji) {
+      const card = document.getElementById(`hintCard${index}`);
+      if (!card) return;
+      
+      const isRevealed = card.dataset.revealed === 'true';
+      
+      if (isRevealed) {
+        card.innerHTML = `
+          <div class="text-7xl mb-2">❓</div>
+          <div class="text-2xl font-bold text-purple-600">Posisi ${index + 1}</div>
+        `;
+        card.dataset.revealed = 'false';
+      } else {
+        card.innerHTML = `
+          <div class="text-7xl mb-2">${emoji}</div>
+          <div class="text-2xl font-bold text-purple-600">Posisi ${index + 1}</div>
+        `;
+        card.dataset.revealed = 'true';
+      }
+      
+      card.classList.add('bounce-animation');
+      setTimeout(() => card.classList.remove('bounce-animation'), 600);
+    }
+
+    function checkPuzzle() {
+      const isCorrect = gameData.puzzle.every((emoji, index) => emoji === gameData.correctPuzzle[index]);
+      
+      if (isCorrect) {
+        if (isMultiplayer) {
+          if (currentPlayer === 1) player1Score++;
+          else player2Score++;
+        }
+        showCorrectPopup();
+        setTimeout(() => {
+          currentLevel++;
+          if (isMultiplayer) {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+          }
+          renderPuzzleGame();
+        }, 1500);
+      } else {
+        showWrongPopup();
+      }
+    }
+
+    function renderMemoryGame() {
+      if (currentLevel >= 5) {
+        finishGame();
+        return;
+      }
+      
+      const emojis = memoryData[currentLevel];
+      const cards = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+      
+      gameData.memoryCards = cards.map((emoji, index) => ({
+        emoji,
+        flipped: false,
+        matched: false,
+        id: index
+      }));
+      gameData.flippedIndices = [];
+      gameData.matchedCount = 0;
+      
+      let multiplayerHeader = '';
+      if (isMultiplayer) {
+        const currentPlayerName = currentPlayer === 1 ? player1Name : player2Name;
+        const p1Active = currentPlayer === 1 ? 'ring-4 ring-yellow-400' : '';
+        const p2Active = currentPlayer === 2 ? 'ring-4 ring-yellow-400' : '';
+        multiplayerHeader = `
+          <div class="bg-white rounded-3xl p-6 shadow-2xl mb-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="text-center p-4 bg-blue-100 rounded-2xl ${p1Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player1Name}</p>
+                <p class="text-3xl font-bold text-blue-600">⭐ ${player1Score}</p>
+              </div>
+              <div class="text-center p-4 bg-green-100 rounded-2xl ${p2Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player2Name}</p>
+                <p class="text-3xl font-bold text-green-600">⭐ ${player2Score}</p>
+              </div>
+            </div>
+            <p class="text-center text-2xl font-bold text-purple-600 mt-4">Giliran: ${currentPlayerName}</p>
+          </div>
+        `;
+      }
+      
+      const container = document.getElementById('mainContainer');
+      container.innerHTML = `
+        <div class="w-full h-full overflow-auto p-8" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-5xl font-bold text-white text-center mb-6" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">🃏 Memory Match 🃏</h1>
+            
+            ${multiplayerHeader}
+            
+            <div class="bg-white rounded-3xl p-8 shadow-2xl text-center mb-6">
+              <p class="text-3xl font-bold text-gray-700 mb-4">Level ${currentLevel + 1} dari 5</p>
+              <p class="text-2xl font-bold text-pink-600 mb-8">Temukan semua pasangan!</p>
+              
+              <div id="memoryGrid" class="grid grid-cols-4 gap-4 max-w-2xl mx-auto">
+              </div>
+            </div>
+            
+            <div class="text-center">
+              <button onclick="backToGameMenu()" class="bg-white text-gray-700 text-xl font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+                ⬅️ Kembali ke Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      updateMemoryGrid();
+    }
+
+    function updateMemoryGrid() {
+      const grid = document.getElementById('memoryGrid');
+      if (!grid) return;
+      
+      grid.innerHTML = '';
+      
+      gameData.memoryCards.forEach((card, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'w-24 h-24 flex items-center justify-center text-5xl rounded-2xl shadow-lg cursor-pointer card-hover';
+        
+        if (card.matched) {
+          cell.style.backgroundColor = '#bbf7d0';
+          cell.textContent = card.emoji;
+        } else if (card.flipped) {
+          cell.style.backgroundColor = '#fef08a';
+          cell.textContent = card.emoji;
+        } else {
+          cell.style.backgroundColor = '#93c5fd';
+          cell.textContent = '❓';
+          cell.onclick = () => flipMemoryCard(index);
+        }
+        
+        grid.appendChild(cell);
+      });
+    }
+
+    function flipMemoryCard(index) {
+      if (gameData.flippedIndices.length >= 2) return;
+      if (gameData.memoryCards[index].flipped || gameData.memoryCards[index].matched) return;
+      
+      gameData.memoryCards[index].flipped = true;
+      gameData.flippedIndices.push(index);
+      updateMemoryGrid();
+      
+      if (gameData.flippedIndices.length === 2) {
+        const [first, second] = gameData.flippedIndices;
+        const firstCard = gameData.memoryCards[first];
+        const secondCard = gameData.memoryCards[second];
+        
+        if (firstCard.emoji === secondCard.emoji) {
+          setTimeout(() => {
+            firstCard.matched = true;
+            secondCard.matched = true;
+            gameData.matchedCount += 2;
+            gameData.flippedIndices = [];
+            updateMemoryGrid();
+            
+            if (gameData.matchedCount === 16) {
+              if (isMultiplayer) {
+                if (currentPlayer === 1) player1Score++;
+                else player2Score++;
+              }
+              showCorrectPopup();
+              setTimeout(() => {
+                currentLevel++;
+                if (isMultiplayer) {
+                  currentPlayer = currentPlayer === 1 ? 2 : 1;
+                }
+                renderMemoryGame();
+              }, 1500);
+            }
+          }, 500);
+        } else {
+          setTimeout(() => {
+            firstCard.flipped = false;
+            secondCard.flipped = false;
+            gameData.flippedIndices = [];
+            updateMemoryGrid();
+          }, 1000);
+        }
+      }
+    }
+
+    function renderShapesGame() {
+      if (currentLevel >= 10) {
+        finishGame();
+        return;
+      }
+      
+      const targetShape = shapeData[currentLevel];
+      const wrongShapes = shapeData.filter(s => s !== targetShape);
+      const shuffled = wrongShapes.sort(() => Math.random() - 0.5);
+      const options = [targetShape, shuffled[0], shuffled[1]].sort(() => Math.random() - 0.5);
+      
+      let multiplayerHeader = '';
+      if (isMultiplayer) {
+        const currentPlayerName = currentPlayer === 1 ? player1Name : player2Name;
+        const p1Active = currentPlayer === 1 ? 'ring-4 ring-yellow-400' : '';
+        const p2Active = currentPlayer === 2 ? 'ring-4 ring-yellow-400' : '';
+        multiplayerHeader = `
+          <div class="bg-white rounded-3xl p-6 shadow-2xl mb-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="text-center p-4 bg-blue-100 rounded-2xl ${p1Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player1Name}</p>
+                <p class="text-3xl font-bold text-blue-600">⭐ ${player1Score}</p>
+              </div>
+              <div class="text-center p-4 bg-green-100 rounded-2xl ${p2Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player2Name}</p>
+                <p class="text-3xl font-bold text-green-600">⭐ ${player2Score}</p>
+              </div>
+            </div>
+            <p class="text-center text-2xl font-bold text-purple-600 mt-4">Giliran: ${currentPlayerName}</p>
+          </div>
+        `;
+      }
+      
+      const container = document.getElementById('mainContainer');
+      container.innerHTML = `
+        <div class="w-full h-full overflow-auto p-8" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-5xl font-bold text-white text-center mb-6" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">🔷 Warna & Bentuk 🔷</h1>
+            
+            ${multiplayerHeader}
+            
+            <div class="bg-white rounded-3xl p-8 shadow-2xl text-center mb-6">
+              <p class="text-3xl font-bold text-gray-700 mb-4">Level ${currentLevel + 1} dari 10</p>
+              <p class="text-2xl font-bold text-indigo-600 mb-8">Pilih bentuk yang sama!</p>
+              
+              <div class="bg-blue-50 rounded-3xl p-12 mb-12">
+                <div class="text-9xl pulse-animation">${targetShape}</div>
+              </div>
+              
+              <div class="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+                ${options.map(shape => `
+                  <button class="card-hover bg-gradient-to-r from-indigo-400 to-purple-600 text-white py-12 rounded-3xl shadow-lg text-8xl" onclick="checkShapeAnswer('${shape}', '${targetShape}')">
+                    ${shape}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            
+            <div class="text-center">
+              <button onclick="backToGameMenu()" class="bg-white text-gray-700 text-xl font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+                ⬅️ Kembali ke Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function checkShapeAnswer(selected, correct) {
+      if (selected === correct) {
+        if (isMultiplayer) {
+          if (currentPlayer === 1) player1Score++;
+          else player2Score++;
+        }
+        showCorrectPopup();
+      } else {
+        showWrongPopup();
+      }
+      
+      setTimeout(() => {
+        currentLevel++;
+        if (isMultiplayer) {
+          currentPlayer = currentPlayer === 1 ? 2 : 1;
+        }
+        renderShapesGame();
+      }, 1500);
+    }
+
+    function renderCountdownGame() {
+      if (currentLevel >= 10) {
+        finishGame();
+        return;
+      }
+      
+      const startNumber = Math.floor(Math.random() * 5) + 6;
+      const sequence = Array.from({length: 5}, (_, i) => startNumber - i);
+      const missingIndex = Math.floor(Math.random() * 5);
+      const correctAnswer = sequence[missingIndex];
+      
+      const wrongAnswer1 = correctAnswer + 1;
+      const wrongAnswer2 = correctAnswer - 1;
+      const options = [correctAnswer, wrongAnswer1, wrongAnswer2].sort(() => Math.random() - 0.5);
+      
+      let multiplayerHeader = '';
+      if (isMultiplayer) {
+        const currentPlayerName = currentPlayer === 1 ? player1Name : player2Name;
+        const p1Active = currentPlayer === 1 ? 'ring-4 ring-yellow-400' : '';
+        const p2Active = currentPlayer === 2 ? 'ring-4 ring-yellow-400' : '';
+        multiplayerHeader = `
+          <div class="bg-white rounded-3xl p-6 shadow-2xl mb-6">
+            <div class="grid grid-cols-2 gap-6">
+              <div class="text-center p-4 bg-blue-100 rounded-2xl ${p1Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player1Name}</p>
+                <p class="text-3xl font-bold text-blue-600">⭐ ${player1Score}</p>
+              </div>
+              <div class="text-center p-4 bg-green-100 rounded-2xl ${p2Active}">
+                <p class="text-xl font-bold text-gray-700">👤 ${player2Name}</p>
+                <p class="text-3xl font-bold text-green-600">⭐ ${player2Score}</p>
+              </div>
+            </div>
+            <p class="text-center text-2xl font-bold text-purple-600 mt-4">Giliran: ${currentPlayerName}</p>
+          </div>
+        `;
+      }
+      
+      const container = document.getElementById('mainContainer');
+      container.innerHTML = `
+        <div class="w-full h-full overflow-auto p-8" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-5xl font-bold text-white text-center mb-6" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">🔟 Berhitung Mundur 🔟</h1>
+            
+            ${multiplayerHeader}
+            
+            <div class="bg-white rounded-3xl p-8 shadow-2xl text-center mb-6">
+              <p class="text-3xl font-bold text-gray-700 mb-4">Level ${currentLevel + 1} dari 10</p>
+              <p class="text-2xl font-bold text-red-600 mb-8">Angka apa yang hilang?</p>
+              
+              <div class="flex justify-center gap-4 mb-12">
+                ${sequence.map((num, i) => `
+                  <div class="w-20 h-20 flex items-center justify-center text-4xl font-bold rounded-2xl shadow-lg ${i === missingIndex ? 'bg-yellow-200' : 'bg-blue-100'}">
+                    ${i === missingIndex ? '?' : num}
+                  </div>
+                `).join('')}
+              </div>
+              
+              <div class="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+                ${options.map(num => `
+                  <button class="card-hover bg-gradient-to-r from-red-400 to-pink-600 text-white text-5xl font-bold py-10 rounded-3xl shadow-lg" onclick="checkCountdownAnswer(${num}, ${correctAnswer})">
+                    ${num}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            
+            <div class="text-center">
+              <button onclick="backToGameMenu()" class="bg-white text-gray-700 text-xl font-bold px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+                ⬅️ Kembali ke Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function checkCountdownAnswer(selected, correct) {
+      if (selected === correct) {
+        if (isMultiplayer) {
+          if (currentPlayer === 1) player1Score++;
+          else player2Score++;
+        }
+        showCorrectPopup();
+      } else {
+        showWrongPopup();
+      }
+      
+      setTimeout(() => {
+        currentLevel++;
+        if (isMultiplayer) {
+          currentPlayer = currentPlayer === 1 ? 2 : 1;
+        }
+        renderCountdownGame();
+      }, 1500);
+    }
+
+    function renderRewardPage() {
+      let message = '';
+      let emoji = '';
+      let colorClass = '';
+      
+      if (isMultiplayer) {
+        if (player1Score > player2Score) {
+          message = `${player1Name} Menang!`;
+          emoji = '👑';
+          colorClass = 'from-yellow-400 to-orange-500';
+        } else if (player2Score > player1Score) {
+          message = `${player2Name} Menang!`;
+          emoji = '👑';
+          colorClass = 'from-yellow-400 to-orange-500';
+        } else {
+          message = 'Permainan Seri!';
+          emoji = '🤝';
+          colorClass = 'from-blue-400 to-purple-500';
+        }
+        
+        saveScore(player1Name, currentGame, player1Score);
+        saveScore(player2Name, currentGame, player2Score);
+      } else {
+        message = `Hebat ${playerName}!`;
+        emoji = '🎊';
+        colorClass = 'from-pink-400 to-purple-600';
+        
+        saveScore(playerName, currentGame, currentLevel || currentQuestionIndex);
+      }
+      
+      const container = document.getElementById('mainContainer');
+      container.innerHTML = `
+        <div class="w-full h-full flex items-center justify-center p-8" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <div class="max-w-3xl text-center">
+            <div class="float-animation mb-8">
+              <h1 class="text-8xl font-bold text-white mb-8" style="text-shadow: 3px 3px 6px rgba(0,0,0,0.3);">${message}</h1>
+            </div>
+            
+            <div class="text-9xl mb-8 pulse-animation">${emoji}</div>
+            
+            ${isMultiplayer ? `
+              <div class="bg-white rounded-3xl p-8 shadow-2xl mb-8">
+                <h2 class="text-4xl font-bold text-gray-800 mb-6">Skor Akhir:</h2>
+                <div class="grid grid-cols-2 gap-6">
+                  <div class="p-6 bg-blue-100 rounded-2xl">
+                    <p class="text-2xl font-bold text-gray-700 mb-2">👤 ${player1Name}</p>
+                    <p class="text-5xl font-bold text-blue-600">⭐ ${player1Score}</p>
+                  </div>
+                  <div class="p-6 bg-green-100 rounded-2xl">
+                    <p class="text-2xl font-bold text-gray-700 mb-2">👤 ${player2Name}</p>
+                    <p class="text-5xl font-bold text-green-600">⭐ ${player2Score}</p>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+            
+            <div class="space-y-4">
+              <button onclick="backToGameMenu()" class="w-full glow-animation pulse-animation bg-gradient-to-r ${colorClass} text-white text-3xl font-bold px-12 py-6 rounded-full shadow-2xl hover:scale-105 transition-all">
+                🎮 Main Lagi
+              </button>
+              
+              <button onclick="backToWelcome()" class="w-full bg-white text-gray-700 text-2xl font-bold px-12 py-6 rounded-full shadow-xl hover:scale-105 transition-all">
+                🏠 Kembali ke Awal
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showCorrectPopup() {
+      const container = document.getElementById('mainContainer');
+      const overlay = document.createElement('div');
+      overlay.id = 'correctPopup';
+      overlay.className = 'fixed inset-0 flex items-center justify-center z-50';
+      overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+      
+      const successMessages = ['HEBAT!', 'PINTAR!', 'MANTAP!'];
+      const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+      
+      overlay.innerHTML = `
+        <div class="bg-white rounded-3xl p-8 shadow-2xl text-center max-w-md pop-in">
+          <h2 class="text-4xl font-bold text-green-600 mb-3 pulse-animation">${randomMessage}</h2>
+          <p class="text-xl font-bold text-gray-700">Lanjutkan!</p>
+        </div>
+      `;
+      container.appendChild(overlay);
+      
+      setTimeout(() => {
+        overlay.remove();
+      }, 1500);
+    }
+
+    function showWrongPopup() {
+      const container = document.getElementById('mainContainer');
+      const overlay = document.createElement('div');
+      overlay.id = 'wrongPopup';
+      overlay.className = 'fixed inset-0 flex items-center justify-center z-50';
+      overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+      overlay.innerHTML = `
+        <div class="bg-white rounded-3xl p-12 shadow-2xl text-center max-w-lg bounce-animation">
+          <h2 class="text-4xl font-bold text-orange-600 mb-4">Belum Tepat!</h2>
+          <p class="text-2xl font-bold text-gray-700 mb-6">Coba lagi ya!</p>
+          <button onclick="closeWrongPopup()" class="bg-gradient-to-r from-blue-400 to-blue-600 text-white text-2xl font-bold px-10 py-4 rounded-full shadow-lg hover:scale-105 transition-all">
+            Oke, Coba Lagi!
+          </button>
+        </div>
+      `;
+      container.appendChild(overlay);
+    }
+
+    function closeWrongPopup() {
+      const popup = document.getElementById('wrongPopup');
+      if (popup) popup.remove();
+    }
+
+    function showErrorAnimation() {
+      const container = document.getElementById('mainContainer');
+      container.classList.add('bounce-animation');
+      setTimeout(() => {
+        container.classList.remove('bounce-animation');
+      }, 600);
+    }
+
+    function selectMode(multiplayer) {
+      isMultiplayer = multiplayer;
+      if (multiplayer) {
+        currentPage = 'multiplayerSetup';
+      } else {
+        currentPage = 'gameMenu';
+      }
+      renderPage();
+    }
+
+    function startGame(gameId) {
+      currentGame = gameId;
+      currentLevel = 0;
+      currentQuestionIndex = 0;
+      currentPage = gameId;
+      renderPage();
+    }
+
+    function finishGame() {
+      currentPage = 'reward';
+      renderPage();
+    }
+
+    function backToGameMenu() {
+      currentLevel = 0;
+      currentQuestionIndex = 0;
+      gameData = {};
+      currentPage = 'gameMenu';
+      renderPage();
+    }
+
+    function backToLevelSelect(page) {
+      currentLevel = 0;
+      currentQuestionIndex = 0;
+      gameData = {};
+      currentPage = page;
+      renderPage();
+    }
+
+    function backToWelcome() {
+      currentPage = 'welcome';
+      currentLevel = 0;
+      currentQuestionIndex = 0;
+      player1Score = 0;
+      player2Score = 0;
+      currentPlayer = 1;
+      isMultiplayer = false;
+      gameData = {};
+      renderPage();
+    }
+
+    // Element SDK
+    async function onConfigChange(config) {
+      const baseSize = config.font_size || defaultConfig.font_size;
+      const customFont = config.font_family || defaultConfig.font_family;
+      const baseFontStack = 'Comic Sans MS, cursive, sans-serif';
+      
+      const welcomeTitle = document.getElementById('welcomeTitle');
+      const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+      const startButton = document.getElementById('startButton');
+      
+      if (welcomeTitle) {
+        welcomeTitle.textContent = config.welcome_title || defaultConfig.welcome_title;
+        welcomeTitle.style.fontFamily = `${customFont}, ${baseFontStack}`;
+        welcomeTitle.style.fontSize = `${baseSize * 4.375}px`;
+      }
+      
+      if (welcomeSubtitle) {
+        welcomeSubtitle.textContent = config.welcome_subtitle || defaultConfig.welcome_subtitle;
+        welcomeSubtitle.style.fontFamily = `${customFont}, ${baseFontStack}`;
+        welcomeSubtitle.style.fontSize = `${baseSize * 1.875}px`;
+      }
+      
+      if (startButton) {
+        startButton.textContent = (config.start_button_text || defaultConfig.start_button_text) + ' 🚀';
+        startButton.style.fontFamily = `${customFont}, ${baseFontStack}`;
+      }
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            },
+            {
+              get: () => config.secondary_color || defaultConfig.secondary_color,
+              set: (value) => {
+                config.secondary_color = value;
+                window.elementSdk.setConfig({ secondary_color: value });
+              }
+            },
+            {
+              get: () => config.surface_color || defaultConfig.surface_color,
+              set: (value) => {
+                config.surface_color = value;
+                window.elementSdk.setConfig({ surface_color: value });
+              }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => {
+                config.text_color = value;
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            },
+            {
+              get: () => config.accent_color || defaultConfig.accent_color,
+              set: (value) => {
+                config.accent_color = value;
+                window.elementSdk.setConfig({ accent_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => {
+              config.font_size = value;
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["welcome_title", config.welcome_title || defaultConfig.welcome_title],
+          ["welcome_subtitle", config.welcome_subtitle || defaultConfig.welcome_subtitle],
+          ["start_button_text", config.start_button_text || defaultConfig.start_button_text]
+        ])
+      });
+    }
+
+    // Initialize
+    initDataSdk();
+    renderPage();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ac8be4f6495fe1c',t:'MTc2NTQ5NTU0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
